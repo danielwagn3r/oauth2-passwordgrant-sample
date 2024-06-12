@@ -28,11 +28,11 @@ public class Program
             .ReadFrom.Configuration(_configuration)
             .CreateLogger();
 
-        var domain = $"https://{_configuration["Auth0:Domain"]}/";
+        var authority = _configuration["Sts:Authority"];
 
-        Log.Debug("Domain: {domain}", domain);
+        Log.Debug("Authority: {authority}", authority);
 
-        var disco = await GetDiscoveryResponse(domain);
+        var disco = await GetDiscoveryResponse(authority);
 
         var tokenResponse = await GetTokenResponse(disco);
 
@@ -71,17 +71,17 @@ public class Program
         {
             Address = disco.TokenEndpoint,
 
-            ClientId = _configuration["Auth0:ClientId"],
-            ClientSecret = _configuration["Auth0:ClientSecret"],
+            ClientId = _configuration["Sts:ClientId"],
+            ClientSecret = _configuration["Sts:ClientSecret"],
 
-            UserName = _configuration["Auth0:Username"],
-            Password = _configuration["Auth0:Password"],
+            UserName = _configuration["Sts:Username"],
+            Password = _configuration["Sts:Password"],
 
             Scope = "openid email profile offline_access calc:double",
 
             Parameters =
             {
-                {"audience", _configuration["CalculatorApi:ApiIdentifier"]}
+                {"audience", _configuration["Api:Audience"]}
             }
         });
 
@@ -107,8 +107,8 @@ public class Program
         {
             Address = disco.TokenEndpoint,
 
-            ClientId = _configuration["Auth0:ClientId"],
-            ClientSecret = _configuration["Auth0:ClientSecret"],
+            ClientId = _configuration["Sts:ClientId"],
+            ClientSecret = _configuration["Sts:ClientSecret"],
 
             RefreshToken = refreshToken
         });
@@ -130,12 +130,12 @@ public class Program
     {
         var client = new HttpClient
         {
-            BaseAddress = new Uri(_configuration["CalculatorApi:Address"])
+            BaseAddress = new Uri(_configuration["Api:BaseAddress"])
         };
 
         client.SetBearerToken(token);
 
-        var response = await client.GetStringAsync("/api/double/3");
+        var response = await client.GetStringAsync("/double/3");
 
         Log.Information("Response {response}", response);
     }
